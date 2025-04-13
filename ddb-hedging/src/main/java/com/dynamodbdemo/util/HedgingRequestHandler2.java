@@ -46,21 +46,25 @@ public class HedgingRequestHandler2 implements HedgingRequestHandler {
             long delay = (long)((double)delaysInMillis.get(i) * 1_000_000L);
 
             CompletableFuture<DDBResponse> hedgedRequest = CompletableFuture.supplyAsync(() -> {
-                logger.info("Check Before hedged request#{} can be initiated", requestNumber);
-                // Check if any previous request is already complete
-                CompletableFuture<DDBResponse> completedFuture = allRequests.stream()
-                        .filter(CompletableFuture::isDone)
-                        .findFirst()
-                        .orElse(null);
 
-                if (completedFuture != null) {
-                    logger.info("Previous request already completed, skipping hedge request#{}", requestNumber);
-                    return completedFuture.join();
-                    //throw new CancellationException("Previous request already completed");
+                if (cancelPending) {
+                    logger.info("Check Before hedged request#{} can be initiated", requestNumber);
+                    // Check if any previous request is already complete
+                    CompletableFuture<DDBResponse> completedFuture = allRequests.stream()
+                            .filter(CompletableFuture::isDone)
+                            .findFirst()
+                            .orElse(null);
+
+                    if (completedFuture != null) {
+                        logger.info("Previous request already completed, skipping hedge request#{}", requestNumber);
+                        return completedFuture.join();
+                        //throw new CancellationException("Previous request already completed");
+                    }
                 }
 
                 // If no previous request is complete, make new hedged request
                 logger.info("Initiating hedge request#{}", requestNumber);
+
                 return supplier.get()
                         .thenApply(response -> {
                             response.setRequestNumber(requestNumber);
