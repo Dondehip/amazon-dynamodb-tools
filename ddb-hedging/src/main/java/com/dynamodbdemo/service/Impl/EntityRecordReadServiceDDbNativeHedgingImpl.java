@@ -35,18 +35,16 @@ public class EntityRecordReadServiceDDbNativeHedgingImpl extends AbstractEntityR
 
     @Override
     public List<DDBMetaDataAccessor> getEntityRecords(
-            String ccNum, String clientId, float delayInMillis, int numberOfHedgers) {
+            String ccNum, String clientId, float delayInMillis) {
 
-        validateInput(ccNum, clientId, delayInMillis, numberOfHedgers);
+        validateInput(ccNum, clientId, delayInMillis);
 
         long startTime = System.nanoTime();
         logger.debug("Starting getEntityRecords request for clientId: {}", clientId);
 
-        // Create a list of delays for each hedger
-        List<Float> delaysInMillisList = createDelaysList(delayInMillis, numberOfHedgers);
 
         try {
-            DDBResponse response = getDdbResponse(ccNum, clientId, delaysInMillisList);
+            DDBResponse response = getDdbResponse(ccNum, clientId, delayInMillis);
 
             long endTime = System.nanoTime();
             response.setActualLatency(endTime - startTime);
@@ -66,17 +64,16 @@ public class EntityRecordReadServiceDDbNativeHedgingImpl extends AbstractEntityR
 
     @Override
     public CompletableFuture<List<DDBMetaDataAccessor>> getEntityRecordsAsync(
-            String ccNum, String clientId, float delayInMillis, int numberOfHedgers) {
+            String ccNum, String clientId, float delayInMillis) {
 
         try {
-            validateInput(ccNum, clientId, delayInMillis, numberOfHedgers);
+            validateInput(ccNum, clientId, delayInMillis);
 
             long startTime = System.nanoTime();
             logger.debug("Starting async getEntityRecords request for clientId: {}", clientId);
 
-            List<Float> delaysInMillisList = createDelaysList(delayInMillis, numberOfHedgers);
 
-            return getDdbResponseAsync(ccNum, clientId, delaysInMillisList)
+            return getDdbResponseAsync(ccNum, clientId, delayInMillis)
                     .thenApply(response -> {
                         long endTime = System.nanoTime();
                         response.setActualLatency(endTime - startTime);
@@ -107,7 +104,7 @@ public class EntityRecordReadServiceDDbNativeHedgingImpl extends AbstractEntityR
     }
 
     private DDBResponse getDdbResponse(
-            String ccNum, String clientId, List<Float> delaysInMillis) {
+            String ccNum, String clientId, float delaysInMillis) {
 
         return hedgingRequestHandler.hedgeRequests(
                 () -> entityRecordDDbNativeDAO.fetchByRecordIDAndEntityNumberAsync(ccNum, clientId),
@@ -116,7 +113,7 @@ public class EntityRecordReadServiceDDbNativeHedgingImpl extends AbstractEntityR
     }
 
     private CompletableFuture<DDBResponse> getDdbResponseAsync(
-            String ccNum, String clientId, List<Float> delaysInMillis) {
+            String ccNum, String clientId, float delaysInMillis) {
 
         long hedgingStartTime = System.nanoTime();
 
@@ -130,7 +127,7 @@ public class EntityRecordReadServiceDDbNativeHedgingImpl extends AbstractEntityR
         });
     }
 
-    private void validateInput(String ccNum, String clientId, float delayInMillis, int numberOfHedgers) {
+    private void validateInput(String ccNum, String clientId, float delayInMillis) {
         if (ccNum == null || ccNum.trim().isEmpty()) {
             throw new IllegalArgumentException("ccNum cannot be null or empty");
         }
@@ -139,9 +136,6 @@ public class EntityRecordReadServiceDDbNativeHedgingImpl extends AbstractEntityR
         }
         if (delayInMillis < 0) {
             throw new IllegalArgumentException("delayInMillis cannot be negative");
-        }
-        if (numberOfHedgers < 1) {
-            throw new IllegalArgumentException("numberOfHedgers must be at least 1");
         }
     }
 }

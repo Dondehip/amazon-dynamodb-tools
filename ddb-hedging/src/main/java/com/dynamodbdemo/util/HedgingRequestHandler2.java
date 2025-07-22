@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -20,12 +22,10 @@ public class HedgingRequestHandler2 implements HedgingRequestHandler {
 
     public CompletableFuture<DDBResponse> hedgeRequests(
             Supplier<CompletableFuture<DDBResponse>> supplier,
-            List<Float> delaysInMillis, boolean cancelPending)
+           float delaysInMillis, boolean cancelPending)
     {
 
-        if (delaysInMillis == null || delaysInMillis.isEmpty()) {
-            return supplier.get();
-        }
+
 
         logger.info("Initiating initial request");
         CompletableFuture<DDBResponse> firstRequest = supplier.get()
@@ -38,14 +38,24 @@ public class HedgingRequestHandler2 implements HedgingRequestHandler {
         List<CompletableFuture<DDBResponse>> allRequests = new ArrayList<>();
         allRequests.add(firstRequest);
 
-        // Create hedged requests for each delay
-        for (int i = 0; i < delaysInMillis.size(); i++) {
-            final int requestNumber = i + 2;
+
+            final int requestNumber = 2;
 
             //Convert to Nano Seconds
-            long delay = (long)((double)delaysInMillis.get(i) * 1_000_000L);
+            long delay = (long)((double)delaysInMillis * 1_000_000L);
+            // Calculate the future instant for scheduling
+            Instant scheduledTime = Instant.now().plusNanos((long)delay);
 
             CompletableFuture<DDBResponse> hedgedRequest = CompletableFuture.supplyAsync(() -> {
+
+                // Measure actual execution time
+                Instant actualExecutionTime = Instant.now();
+
+                // Calculate delay in milliseconds
+                float schedulingDelay = (float) Duration.between(scheduledTime, actualExecutionTime).toNanos() /1_000_000L;
+
+                logger.info(String.format("Scheduling delay for request: %.2f milliseconds", schedulingDelay));
+
 
                 if (cancelPending) {
                     logger.info("Check Before hedged request#{} can be initiated", requestNumber);
@@ -68,6 +78,7 @@ public class HedgingRequestHandler2 implements HedgingRequestHandler {
                 return supplier.get()
                         .thenApply(response -> {
                             response.setRequestNumber(requestNumber);
+                            response.setSchedulingDelay(schedulingDelay);
                             return response;
                         })
                         .exceptionally(throwable -> {
@@ -79,7 +90,7 @@ public class HedgingRequestHandler2 implements HedgingRequestHandler {
             }, CompletableFuture.delayedExecutor(delay, TimeUnit.NANOSECONDS));
 
             allRequests.add(hedgedRequest);
-        }
+
 
         // Return the result of whichever request completes first and cancel others
         return CompletableFuture.anyOf(allRequests.toArray(new CompletableFuture[0]))

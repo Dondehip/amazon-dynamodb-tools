@@ -20,12 +20,12 @@ public class EntityRecordReadServiceDDbNativeImpl extends AbstractEntityRecordRe
     }
 
     @Override
-    public CompletableFuture<List<DDBMetaDataAccessor>> getEntityRecordsAsync(String recordId, String entityNumber, float delayInMillis, int numberOfHedgers) {
+    public CompletableFuture<List<DDBMetaDataAccessor>> getEntityRecordsAsync(String recordId, String entityNumber, float delayInMillis) {
         return null;
     }
 
     @Override
-    public List<DDBMetaDataAccessor> getEntityRecords(String recordId, String entityNumber, float delayInMillis, int numberOfHedgers) throws InterruptedException {
+    public List<DDBMetaDataAccessor> getEntityRecords(String recordId, String entityNumber, float delayInMillis) throws InterruptedException {
 
         long startTime = System.nanoTime();
 

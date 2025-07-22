@@ -22,6 +22,8 @@ public class DDBResponse implements DDBMetaDataAccessor {
 
     private String requestName;
 
+    private float schedulingDelay;
+
     @Override
     public int getItemCount() {
         if (items == null) {

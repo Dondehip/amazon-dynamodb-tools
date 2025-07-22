@@ -36,11 +36,8 @@ public class CrtHedgingRequestHandler implements HedgingRequestHandler {
     @Override
     public CompletableFuture<DDBResponse> hedgeRequests(
             Supplier<CompletableFuture<DDBResponse>> supplier,
-            List<Float> delaysInMillis, boolean cancelPending) {
+            float delayMillis, boolean cancelPending) {
 
-        if (delaysInMillis == null || delaysInMillis.isEmpty()) {
-            return supplier.get();
-        }
 
         logger.info("Initiating initial request");
         CompletableFuture<DDBResponse> firstRequest = supplier.get()
@@ -74,10 +71,8 @@ public class CrtHedgingRequestHandler implements HedgingRequestHandler {
             }
         }, hedgingThreadPool);
 
-        // Create hedged requests for each delay
-        for (int i = 0; i < delaysInMillis.size(); i++) {
-            final int requestNumber = i + 2;
-            final float delayMillis = delaysInMillis.get(i);
+
+            final int requestNumber = 2;
 
             CompletableFuture<DDBResponse> hedgedRequest = new CompletableFuture<>();
             allRequests.add(hedgedRequest);
@@ -121,7 +116,7 @@ public class CrtHedgingRequestHandler implements HedgingRequestHandler {
                             }
                         }, hedgingThreadPool);
             }, scheduledTime);
-        }
+
 
         return finalResult;
     }

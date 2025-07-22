@@ -33,15 +33,8 @@ public class NettyHedgingRequestHandler implements HedgingRequestHandler {
     @Override
     public CompletableFuture<DDBResponse> hedgeRequests(
             Supplier<CompletableFuture<DDBResponse>> supplier,
-            List<Float> delaysInMillis, boolean cancelPending) {
+            float delaysInMillis, boolean cancelPending) {
 
-        if (delaysInMillis == null || delaysInMillis.isEmpty()) {
-            throw new IllegalArgumentException("Delays list cannot be null or empty");
-        }
-
-        if (delaysInMillis.size() > MAX_HEDGED_REQUESTS) {
-            throw new IllegalArgumentException("Number of hedged requests cannot exceed " + MAX_HEDGED_REQUESTS);
-        }
 
         List<CompletableFuture<DDBResponse>> futures = new ArrayList<>();
         EventLoop eventLoop = getEventLoop(); // Get the current Netty EventLoop
@@ -56,12 +49,11 @@ public class NettyHedgingRequestHandler implements HedgingRequestHandler {
                 });
         futures.add(initialRequest);
 
-        // Create hedged requests
-        for (int i = 0; i < delaysInMillis.size(); i++) {
-            final int requestNumber = i + 2;
+
+            final int requestNumber =  2;
 
             //Convert to nano seconds
-            long delay = (long)((double)delaysInMillis.get(i) * 1_000_000L);
+            long delay = (long)((double)delaysInMillis * 1_000_000L);
 
             CompletableFuture<DDBResponse> hedgedRequest = new CompletableFuture<>();
 
@@ -97,7 +89,7 @@ public class NettyHedgingRequestHandler implements HedgingRequestHandler {
             }, delay, TimeUnit.NANOSECONDS);
 
             futures.add(hedgedRequest);
-        }
+
 
         // Return the first successful response
         return CompletableFuture.anyOf(futures.toArray(new CompletableFuture[0]))

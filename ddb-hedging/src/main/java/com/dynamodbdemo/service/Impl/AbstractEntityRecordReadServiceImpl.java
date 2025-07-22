@@ -34,7 +34,7 @@ public abstract class AbstractEntityRecordReadServiceImpl implements EntityRecor
         String entityNumber = requestDTO.getEntityNumber();
 
 
-        List<DDBMetaDataAccessor> metaDataAccessorCCAuthResponse = getEntityRecords(recordId, entityNumber, delayInMillis, numberOfHedgers);
+        List<DDBMetaDataAccessor> metaDataAccessorCCAuthResponse = getEntityRecords(recordId, entityNumber, delayInMillis);
 
         AtomicInteger totalItems = new AtomicInteger();
 
@@ -81,8 +81,7 @@ public abstract class AbstractEntityRecordReadServiceImpl implements EntityRecor
                 CompletableFuture<List<DDBMetaDataAccessor>> futureRecords = getEntityRecordsAsync(
                         recordId,
                         entityNumber,
-                        delayInMillis,
-                        numberOfHedgers
+                        delayInMillis
                 );
 
                 // Wait for the records and process them
@@ -111,11 +110,10 @@ public abstract class AbstractEntityRecordReadServiceImpl implements EntityRecor
     public abstract CompletableFuture<List<DDBMetaDataAccessor>> getEntityRecordsAsync(
             String recordId,
             String entityNumber,
-            float delayInMillis,
-            int numberOfHedgers);
+            float delayInMillis);
 
 
-    public abstract List<DDBMetaDataAccessor> getEntityRecords(String recordId, String entityNumber, float delayInMillis, int numberOfHedgers) throws ExecutionException, InterruptedException;
+    public abstract List<DDBMetaDataAccessor> getEntityRecords(String recordId, String entityNumber, float delayInMillis) throws ExecutionException, InterruptedException;
 
 
 }
