@@ -48,4 +48,8 @@ public class DDBResponse implements DDBMetaDataAccessor {
         return DDBRequestID;
     }
 
+    @Override
+    public float getSchedulingDelay() {
+        return schedulingDelay;
+    }
 }

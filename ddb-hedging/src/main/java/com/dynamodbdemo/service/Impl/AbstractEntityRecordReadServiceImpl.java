@@ -56,7 +56,7 @@ public abstract class AbstractEntityRecordReadServiceImpl implements EntityRecor
 
         StringBuilder LogMessage = new StringBuilder();
 
-        metaDataAccesors.forEach(dataAccessor -> LogMessage.append(dataAccessor.getRequestNumber()).append(":").append(String.format("%.2f", (float) dataAccessor.getResponseLatency() / 1000000)).append(":").append(dataAccessor.getDDBRequestID()).append(":").append(requestDTO.getEntityNumber()).append("-").append(requestDTO.getRecordId()).append(":"));
+        metaDataAccesors.forEach(dataAccessor -> LogMessage.append(dataAccessor.getRequestNumber()).append(":").append(String.format("%.2f", (float) dataAccessor.getResponseLatency() / 1000000)).append(":").append(dataAccessor.getDDBRequestID()).append(":").append(requestDTO.getEntityNumber()).append("-").append(requestDTO.getRecordId()).append(":").append(String.format("%.2f", dataAccessor.getSchedulingDelay())).append(":"));
 
         //Convert to Millis
         float result = (float) totalTime / 1000000;

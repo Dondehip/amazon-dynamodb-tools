@@ -14,4 +14,6 @@ public interface DDBMetaDataAccessor {
 
     String getDDBRequestID();
 
+    float getSchedulingDelay();
+
 }
